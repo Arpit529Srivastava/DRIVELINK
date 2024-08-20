@@ -1,25 +1,33 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { app } from "./app.js";
 
 document.addEventListener("DOMContentLoaded", function () {
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-        apiKey: "AIzaSyAFEFTk3oaq6jIx4HaLtbG5wHHib1TkK8I",
-        authDomain: "signup-and-login-bd657.firebaseapp.com",
-        databaseURL: "https://signup-and-login-bd657-default-rtdb.firebaseio.com",
-        projectId: "signup-and-login-bd657",
-        storageBucket: "signup-and-login-bd657.appspot.com",
-        messagingSenderId: "157132825370",
-        appId: "1:157132825370:web:a6fe93e773bc8f75ba82a3"
-    };
+    const auth = getAuth(app);
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
+    // Check if the user is already logged in
+    var unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // Show confirmation dialog
+            const confirmLogout = window.confirm("You are already logged in. Do you want to logout first?");
+            if (confirmLogout) {
+                // User chose OK, so sign out
+                signOut(auth).then(() => {
+                    window.location.href = 'login.html'; // Redirect to home page after logout
+                }).catch((error) => {
+                    console.error('Logout error:', error);
+                });
+            } else {
+                // User chose Cancel, go back to the previous page
+                window.history.back();
+            }
+        }
+    });
 
     // Submit button
     const submitButton = document.getElementById('submit');
     if (submitButton) {
         submitButton.addEventListener("click", function (event) {
+            unsubscribe();
             event.preventDefault();
 
             // Inputs
@@ -28,14 +36,13 @@ document.addEventListener("DOMContentLoaded", function () {
             const email = emailInput.value;
             const password = passwordInput.value;
 
-            const auth = getAuth();
-
             signInWithEmailAndPassword(auth, email, password)
                 .then((userCredential) => {
                     // Signed in 
                     const user = userCredential.user;
                     alert("Sign in successful!");
                     console.log(user);
+                    window.location.href = 'profile.html';
                 })
                 .catch((error) => {
                     const errorMessage = error.message;
